@@ -19,7 +19,8 @@ pub struct Shape {
     pub(crate) img_index: usize,
     pub(crate) x: i32,
     pub(crate) y: i32,
-    pub(crate) scale: f32,
+    pub(crate) scale_x: f32,
+    pub(crate) scale_y: f32,
     pub(crate) rot: f32,
     //pub(crate) tint: Option<[f32; 4]>,
 }
@@ -91,8 +92,9 @@ impl Shape {
         let positions = [[-w, -h], [-w, h], [w, h], [w, -h]];
 
         // scale
-        let scale = self.scale;
-        let positions = positions.map(|p| [p[0] as f32 * scale, p[1] as f32 * scale]);
+        let scale_x = self.scale_x;
+        let scale_y = self.scale_y;
+        let positions = positions.map(|p| [p[0] as f32 * scale_x, p[1] as f32 * scale_y]);
 
         // rotate
         let rot = self.rot;
@@ -257,14 +259,16 @@ impl Shape {
         let mut rng = rand::thread_rng();
         let x = rng.gen_range(0..width) as i32;
         let y = rng.gen_range(0..height) as i32;
-        let scale = rng.gen_range(0.1..(std::cmp::max(width, height) as f32 / 40.0));
+        let scale_x = rng.gen_range(0.1..(std::cmp::max(width, height) as f32 / 40.0));
+        let scale_y = rng.gen_range(0.1..(std::cmp::max(width, height) as f32 / 40.0));
         let rot = rng.gen_range(0.0..(2.0 * std::f32::consts::PI));
 
         Shape {
             img_index: rng.gen_range(0..OBJ_IDS.len()) as usize,
             x,
             y,
-            scale,
+            scale_x,
+            scale_y,
             rot,
         }
     }
@@ -273,9 +277,13 @@ impl Shape {
         let d = (ADJUSTMENTS - divisor) as f32 / ADJUSTMENTS as f32;
         self.x += (rand::thread_rng().gen_range(-10i32..=10) as f32 * d) as i32;
         self.y += (rand::thread_rng().gen_range(-10i32..=10) as f32 * d) as i32;
-        self.scale += rand::thread_rng().gen_range(-0.2..0.2) * d;
-        if self.scale < 0.1 {
-            self.scale = 0.1;
+        self.scale_x += rand::thread_rng().gen_range(-0.2..0.2) * d;
+        if self.scale_x < 0.1 {
+            self.scale_x = 0.1;
+        }
+        self.scale_y += rand::thread_rng().gen_range(-0.2..0.2) * d;
+        if self.scale_y < 0.1 {
+            self.scale_y = 0.1;
         }
         self.rot += rand::thread_rng().gen_range(-0.5..0.5) * d;
     }
@@ -285,12 +293,13 @@ impl Shape {
         let hsv_string = format!("{}a{}a{}a0a0", h, s, v);
         let scale = 1.0;
         format!(
-            "1,{},2,{},3,{},6,{},32,{},41,1,43,{hsv_string},21,1,22,2,25,{layer},24,-1;",
+            "1,{},2,{},3,{},6,{},128,{},129,{},41,1,43,{hsv_string},21,1,22,2,25,{layer},24,-1;",
             OBJ_IDS[self.img_index],
             (self.x as f32) * 0.5 * scale,
             -(self.y as f32) * 0.5 * scale,
             self.rot * 180.0 / std::f32::consts::PI,
-            self.scale * scale,
+            self.scale_x * scale,
+            self.scale_y * scale,
         )
     }
 }
